@@ -6,8 +6,13 @@ USERNAME="zomboyadmin"
 USERPASS=""
 TIMEZONE="Europe/Oslo"
 HOSTNAME="archvm"
-DISK="/dev/vda"   # adjust if different disk
+DISK="/dev/sda"   # Changed from vda to sda for Proxmox SCSI
 # ==================
+
+echo "Available disks:"
+lsblk -d -o NAME,SIZE,TYPE | grep disk
+echo "Current DISK setting: ${DISK}"
+read -p "Press Enter to continue or Ctrl+C to abort..."
 
 echo "[1/8] Partitioning disk..."
 sgdisk -Z ${DISK}
@@ -43,7 +48,7 @@ cat <<HOSTS >> /etc/hosts
 127.0.1.1   ${HOSTNAME}.localdomain ${HOSTNAME}
 HOSTS
 
-# Root password
+# Root password (empty by default - you should set USERPASS)
 echo "root:${USERPASS}" | chpasswd
 
 # Create user
@@ -53,10 +58,14 @@ echo "${USERNAME}:${USERPASS}" | chpasswd
 # Enable sudo for wheel group
 echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
 
+# Install and configure GRUB bootloader
+pacman -S --noconfirm grub
+grub-install --target=i386-pc ${DISK}
+grub-mkconfig -o /boot/grub/grub.cfg
+
 # Enable services
 systemctl enable NetworkManager
 
-# Optional: enable login via tty (can run Hyprland from login)
 EOF
 
 echo "[6/8] Installation complete — unmounting..."
@@ -64,3 +73,4 @@ umount -R /mnt
 
 echo "[7/8] Done! Reboot into Arch."
 echo "[8/8] After reboot, login as ${USERNAME} and run 'Hyprland' to start the desktop."
+echo ""
