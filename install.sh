@@ -16,11 +16,12 @@ read -p "Press Enter to continue or Ctrl+C to abort..."
 
 echo "[1/8] Partitioning disk..."
 sgdisk -Z ${DISK}
-sgdisk -n 1:0:0 -t 1:8300 ${DISK}
+sgdisk -n 1:0:+2M -t 1:ef02 ${DISK}  # BIOS boot partition (2MB to be safe)
+sgdisk -n 2:0:0 -t 2:8300 ${DISK}    # Root partition
 
 echo "[2/8] Formatting & mounting..."
-mkfs.ext4 ${DISK}1
-mount ${DISK}1 /mnt
+mkfs.ext4 ${DISK}2
+mount ${DISK}2 /mnt
 
 echo "[3/8] Installing base system..."
 pacstrap /mnt base linux linux-firmware vim sudo networkmanager xorg xorg-xwayland mesa \
@@ -74,3 +75,4 @@ umount -R /mnt
 echo "[7/8] Done! Reboot into Arch."
 echo "[8/8] After reboot, login as ${USERNAME} and run 'Hyprland' to start the desktop."
 echo ""
+echo "WARNING: USERPASS is empty! Set a password after first boot with 'passwd'"
